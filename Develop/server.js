@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
-const noteData = require('./db/db.json');
+let noteData = require('./db/db.json');
+const uniqid = require('uniqid'); 
 const fs = require('fs');
 const PORT = 3002;
 
@@ -24,11 +25,22 @@ app.get('/api/notes', (req, res) => res.json(noteData));
 
 app.post('/api/notes', (req, res) => {
 
+  req.body.id = uniqid();
   noteData.push(req.body);
-  console.log(noteData)
 
   fs.writeFile("./db/db.json", JSON.stringify(noteData), (err) => {
-    err ? console.log(err) : console.log('Success!')})
+    err ? res.status(500).json('Error in posting review') : res.status(201).json(noteData)})
+
+});
+
+app.delete('/api/notes/:id', (req, res) => {
+
+  const filterTask = noteData.filter(task => task.id !== req.params.id);
+
+  fs.writeFile("./db/db.json", JSON.stringify(filterTask), (err) => {
+    err ? res.status(500).json('Error in posting review') : res.status(201).json(filterTask)})
+
+  noteData = filterTask;
 });
 
 app.listen(PORT, () => {
